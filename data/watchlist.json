@@ -1,0 +1,15 @@
+[
+    {
+        "ticker": "CSL",
+        "rules": [
+            { "indicator": "RSI", "operator": ">", "threshold": 40 }
+        ]
+    },
+    {
+        "ticker": "TEAM",
+        "rules": [
+            { "indicator": "RSI", "operator": ">", "threshold": 40 },
+            { "indicator": "Price", "operator": "<=", "threshold": 100.00 }
+        ]
+    }
+]

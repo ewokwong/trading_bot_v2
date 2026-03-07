@@ -1,11 +1,9 @@
 import os
 import pytz
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 def get_trading_advice(ticker, buy_price, current_price, buy_datetime, exit_alert):
