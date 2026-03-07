@@ -1,0 +1,9 @@
+[
+    {
+        "ticker": "NOW",
+        "buy_price": "124.34",
+        "buy_datetime": "2026-03-06T23:00:00",
+        "target_sell_price": 164.78,
+        "stop_loss_price": 0.00
+    }
+]

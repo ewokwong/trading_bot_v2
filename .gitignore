@@ -1,0 +1,10 @@
+# Virtual Environment
+# This ignores your local python setup
+tradingbot/
+venv/
+env/
+.venv/
+
+# Environment Variables
+# This ignores your API keys and secrets
+.env
