@@ -2,8 +2,9 @@ name: Run Trading Advice
 
 on:
   schedule:
-    # This runs at 00:00 UTC every day
-    - cron: '0 0 * * *'
+    # 23:00 UTC is 10:00 AM AEDT (Sydney)
+    # Note: After April 5th, this will run at 9:00 AM AEST.
+    - cron: '0 23 * * *'
   workflow_dispatch: # Allows you to run it manually for testing
 
 jobs:
