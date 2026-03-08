@@ -55,6 +55,7 @@ def main():
         full_message = f"{header}\n{advice}"
         full_holdings.append(full_message)
     
+    print("Holdings:", full_holdings)
     report['holdings'] = full_holdings
 
     
@@ -79,6 +80,7 @@ def main():
         full_report = f"🎯 <b>WATCHLIST ENTRY SIGNAL: {ticker}</b>\n{advice}"
         full_watchlist.append(full_report)
     
+    print("Watchlist:", full_watchlist)
     report['watchlist'] = full_watchlist
 
     # ------- NEWS ------- #
@@ -98,6 +100,7 @@ def main():
         full_report = f"🚨 <b>NEWS SIGNALS: {ticker}</b>\n{advice}"
         full_news.append(full_report)
     
+    print("News:", full_news)
     report['news'] = full_news
 
     print("Sending Report")
@@ -110,7 +113,7 @@ def main():
     print("Telegram Report", telegram_summary)
     send_report_email(email_report)
     send_telegram_message(telegram_summary)
-
+    print("Done! Happy money-making :D")
 
 if __name__ == "__main__":
     main()

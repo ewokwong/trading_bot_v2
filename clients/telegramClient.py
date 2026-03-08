@@ -10,18 +10,21 @@ def send_telegram_message(message):
         return
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
+    MAX_LENGTH = 4000
     
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "HTML" 
-    }
+    # Split message into chunks
+    chunks = [message[i:i + MAX_LENGTH] for i in range(0, len(message), MAX_LENGTH)]
     
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        print(f"✅ Telegram Sent: {response.status_code}")
-    except Exception as e:
-        print(f"❌ Failed to send Telegram: {e}")
-        if 'response' in locals():
-            print(f"Error Details: {response.text}")
+    for chunk in chunks:
+        payload = {
+            "chat_id": chat_id,
+            "text": chunk,
+            "parse_mode": "HTML" 
+        }
+        
+        try:
+            response = requests.post(url, json=payload)
+            response.raise_for_status()
+            print(f"✅ Telegram Sent: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Failed to send Telegram: {e}")

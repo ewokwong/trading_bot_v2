@@ -42,7 +42,7 @@ def prepare_telegram_summary(report_text):
     prompt = f"""
     INPUT: {report_text}
     
-    TASK: Generate a Telegram alert in HTML.
+    TASK: Generate a Telegram alert in HTML. Try to keep within 4000 character limit if possible.
     STRUCTURE:
     <b>$TICKER</b> | ACTION_EMOJI <b>ACTION</b>
     — — — — — — — — — —
