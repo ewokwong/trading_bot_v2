@@ -3,12 +3,12 @@ import os
 import pytz
 import time
 
-from clients.geminiClient import get_trading_advice_holdings, get_trading_advice_news, get_trading_advice_watchlist, identify_anxious_selloffs, prepare_email_report, prepare_telegram_summary
+from clients.geminiClient import get_trading_advice_holdings, get_trading_advice_news, get_trading_advice_watchlist, identify_anxious_selloffs, prepare_telegram_summary
 from clients.gmailClient import send_report_email
 from clients.telegramClient import send_telegram_message
 from datetime import datetime
 from dotenv import load_dotenv
-from utils.utils import check_exit_conditions
+from utils.utils import check_exit_conditions, generate_trading_email
 from utils.yfinanceUtils import get_stock_info, get_market_metrics
 
 # Load env variables
@@ -106,13 +106,13 @@ def main():
     print("Sending Report")
     
     # ------- SEND FULL REPORT TO EMAIL, SUMMARY TO TELEGRAM ------- #
-    email_report = prepare_email_report(report)
-    telegram_summary = prepare_telegram_summary(report)
+    email_report = generate_trading_email(report) # Just parsing manually
+    # telegram_summary = prepare_telegram_summary(report) # Uses an LLM call
 
     print("Email Report", email_report)
-    print("Telegram Report", telegram_summary)
+    # print("Telegram Report", telegram_summary)
     send_report_email(email_report)
-    send_telegram_message(telegram_summary)
+    # send_telegram_message(telegram_summary)
     print("Done! Happy money-making :D")
 
 if __name__ == "__main__":

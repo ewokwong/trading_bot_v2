@@ -8,57 +8,25 @@ from google.genai import types
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "gemini-3.1-flash-lite-preview" # While on free tier... 500 Req per day limit
 
-def prepare_email_report(report_text):
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-    
-    prompt = f"""
-    CONTEXT: High-End Financial UI/UX Designer
-    INPUT: {report_text}
-    
-    TASK: Convert the input into a professional HTML dashboard. 
-    
-    ORGANIZATION:
-    You MUST group the output into three clear sections based on the input:
-    1. 📂 PORTFOLIO STATUS
-    2. 🎯 WATCHLIST SIGNALS
-    3. 🚨 MARKET NEWS
-    
-    DESIGN SYSTEM:
-    - SECTION HEADERS: Use #2c3e50 color, 18px, bold, with a 2px solid bottom border.
-    - TICKER CARDS: White background, rounded corners (12px), subtle shadow.
-    - ACTION BADGES: 
-       - BUY: Background #e6f4ea, Text #137333
-       - AVOID: Background #fce8e6, Text #c5221f
-       - WAIT/HOLD: Background #fef7e0, Text #b06000
-    - DATA GRID: #f8f9fa background block. Use 13px Courier font for Price/RSI/PL.
-    
-    STRICT RULES:
-    - If a section (e.g., Portfolio) has no data in the input, omit that header.
-    - Return ONLY the raw HTML <div> content. No markdown code blocks.
-    """
-
-    config = types.GenerateContentConfig(temperature=0.1, max_output_tokens=8192)
-    
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt, 
-        config=config
-    )
-    return response.text.strip()
-
 def prepare_telegram_summary(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-    
+    formatted_date = datetime.now().strftime('%d %b %Y')
+
     prompt = f"""
     CONTEXT: High-frequency trading desk dispatcher.
     INPUT: {report_text}
     
     TASK: Generate a concise, high-density Telegram alert in HTML. 
-    Organize the output into three distinct sections: 
+    
+    STARTING HEADER:
+    <b>Morning Trading Brief: {formatted_date}</b>
+    — — — — — — — — — —
+
+    ORGANIZATION:
+    Organize the output into three distinct sections (after the header): 
     1. 📂 <b>PORTFOLIO STATUS</b>
     2. 🎯 <b>WATCHLIST SIGNALS</b>
     3. 🚨 <b>NEWS SIGNALS</b>
-
     STRUCTURE FOR EACH TICKER:
     <b>$TICKER</b> | EMOJI <b>ACTION</b>
     <code>Context:</code> [Price/RSI/PL%]
