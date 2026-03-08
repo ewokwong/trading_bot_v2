@@ -12,35 +12,32 @@ def prepare_email_report(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     
     prompt = f"""
-    CONTEXT: High-End Financial UI/UX Designer (2026 Standards).
+    CONTEXT: High-End Financial UI/UX Designer
     INPUT: {report_text}
     
-    TASK: Convert the input into a professional, high-density HTML dashboard for an email.
+    TASK: Convert the input into a professional HTML dashboard. 
     
-    DESIGN SYSTEM (CALM & CREDIBLE):
-    1. LAYOUT: Use a single-column 600px container. Each asset (Ticker) gets its own master card.
-    2. TYPOGRAPHY: Body: 14px Sans-serif (Arial/Helvetica). Metrics: 13px Monospace (Courier) for a "Terminal" feel.
-    3. ACTION BADGES: 
-       - BUY: Background #e6f4ea, Text #137333 (Green)
-       - AVOID: Background #fce8e6, Text #c5221f (Red)
-       - WAIT/HOLD: Background #fef7e0, Text #b06000 (Amber)
-    4. DATA GRID: A subtle #f8f9fa block for Price/RSI/PL. Use | separators.
-    5. SECTIONING: Use <h3> headers with a 1px border-bottom for "CRITICAL NEWS" and "THESIS MONITOR." 
-    6. EMOJIS: Use as functional icons (e.g., 🔍 for Audit, 📉 for Sentiment, ✅ for Compliance).
-
+    ORGANIZATION:
+    You MUST group the output into three clear sections based on the input:
+    1. 📂 PORTFOLIO STATUS
+    2. 🎯 WATCHLIST SIGNALS
+    3. 🚨 MARKET NEWS
+    
+    DESIGN SYSTEM:
+    - SECTION HEADERS: Use #2c3e50 color, 18px, bold, with a 2px solid bottom border.
+    - TICKER CARDS: White background, rounded corners (12px), subtle shadow.
+    - ACTION BADGES: 
+       - BUY: Background #e6f4ea, Text #137333
+       - AVOID: Background #fce8e6, Text #c5221f
+       - WAIT/HOLD: Background #fef7e0, Text #b06000
+    - DATA GRID: #f8f9fa background block. Use 13px Courier font for Price/RSI/PL.
+    
     STRICT RULES:
-    - NO INTRO/OUTRO. Only the <div>.
-    - NESTED DATA: For "News," "Strategy Compliance," and "Thesis," use <ul> with 5px padding between items.
-    - BOLDING: Bold all labels (e.g., **CONVICTION:**) but keep values plain text unless they are the "Final Action."
-    - TRUNCATION: If a news point is extremely long (>4 sentences), summarize it into a punchy 2-sentence fragment.
-    
-    OUTPUT: Return ONLY raw HTML. Use table-based layouts for email reliability where needed, but keep the <div> wrapper.
+    - If a section (e.g., Portfolio) has no data in the input, omit that header.
+    - Return ONLY the raw HTML <div> content. No markdown code blocks.
     """
 
-    config = types.GenerateContentConfig(
-        temperature=0.1, # Slight temp for better summarization of long news
-        max_output_tokens=8192
-    )
+    config = types.GenerateContentConfig(temperature=0.1, max_output_tokens=8192)
     
     response = client.models.generate_content(
         model=GEMINI_MODEL,
