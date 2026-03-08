@@ -10,50 +10,32 @@ def check_exit_conditions(current_price, target_sell, stop_loss):
 def generate_trading_email(report):
     """
     Converts a trading report dictionary into a formatted HTML email body.
-    Expects keys: 'holdings', 'watchlist', 'news', 'final_action', 'conviction', 'reason'
+    Expects keys: 'holdings', 'watchlist', 'news'
     """
     
     def format_section(title, data, color):
         if not data:
             return ""
+        
         items_html = ""
         for item in data:
+            # Convert newlines to HTML breaks and clean up extra whitespace
             formatted_item = item.replace("\n", "<br>")
             items_html += f"""
             <div style="border-left: 4px solid {color}; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9; border-radius: 4px;">
                 <div style="font-size: 14px; color: #333;">{formatted_item}</div>
             </div>
             """
+        
         return f"""
         <h2 style="color: {color}; border-bottom: 2px solid {color}; padding-bottom: 5px; font-size: 20px;">{title}</h2>
         {items_html}
         """
 
-    # --- NEW: Action Box Formatter ---
-    def format_action_box(action, conviction, reason):
-        if not action: return ""
-        # Determine color based on action
-        status_color = "#c0392b" if "SELL" in action.upper() else "#27ae60" if "BUY" in action.upper() else "#2c3e50"
-        
-        return f"""
-        <div style="background-color: #ebf5fb; border: 2px solid {status_color}; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-            <h2 style="margin-top: 0; color: {status_color}; text-transform: uppercase; letter-spacing: 1px;">{action}</h2>
-            <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;">
-                <span style="font-weight: bold; font-size: 16px;">Conviction: <span style="color: {status_color};">{conviction}</span></span>
-            </div>
-            <p style="font-style: italic; color: #555; margin: 10px 0 0 0; font-size: 15px;"><strong>Reasoning:</strong> {reason}</p>
-        </div>
-        """
-
-    # Extract data
+    # Extract data with defaults to empty lists to prevent errors
     holdings = report.get("holdings", [])
     watchlist = report.get("watchlist", [])
     news_signals = report.get("news", [])
-    
-    # Extract Action Data
-    final_action = report.get("final_action", "NO ACTION")
-    conviction = report.get("conviction", "N/A")
-    reason = report.get("reason", "No specific catalyst identified.")
 
     html_start = """
     <html>
@@ -63,8 +45,7 @@ def generate_trading_email(report):
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
     """
     
-    # Generate Components
-    action_box_html = format_action_box(final_action, conviction, reason)
+    # Generate section HTML
     holdings_html = format_section("Portfolio Holdings", holdings, "#2980b9")
     watchlist_html = format_section("Watchlist Analysis", watchlist, "#27ae60")
     news_html = format_section("Global News Signals", news_signals, "#e67e22")
@@ -78,4 +59,4 @@ def generate_trading_email(report):
     </html>
     """
 
-    return html_start + action_box_html + holdings_html + watchlist_html + news_html + html_end
+    return html_start + holdings_html + watchlist_html + news_html + html_end
