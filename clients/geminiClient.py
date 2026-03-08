@@ -8,6 +8,58 @@ from google.genai import types
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "gemini-3.1-flash-lite-preview" # While on free tier... 500 Req per day limit
 
+def prepare_email_report(report_text):
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    
+    prompt = f"""
+    CONTEXT: You are a professional financial editor.
+    INPUT: {report_text}
+    
+    TASK: Format the input into a professional HTML email.
+    - KEEP ALL DATA: Do not summarize or remove metrics/news/reasons.
+    - STRUCTURE: Use a vertical stack of "cards" (white background, thin border).
+    - COLOR CODING: 
+        - BUY: Green (#27ae60)
+        - AVOID/SELL: Red (#e74c3c)
+        - WAIT/HOLD: Orange (#f39c12)
+    - STYLE: Use inline CSS only. Ensure it is mobile-responsive and uses sans-serif fonts.
+    
+    OUTPUT: Return ONLY the raw HTML <div> content.
+    """
+
+    config = types.GenerateContentConfig(temperature=0.0)
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt, 
+        config=config
+    )
+    return response.text.strip()
+
+def prepare_telegram_summary(report_text):
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    
+    # Use HTML tags explicitly in the prompt
+    prompt = f"""
+    INPUT: {report_text}
+    
+    TASK: Generate a Telegram alert in HTML.
+    STRUCTURE:
+    <b>$TICKER</b> | ACTION_EMOJI <b>ACTION</b>
+    — — — — — — — — — —
+    <code>Analysis:</code> Summary sentence here.
+    
+    GUIDELINES:
+    - Use 📈 for Buy, 🛑 for Avoid, ⏳ for Wait.
+    - Return ONLY the HTML string.
+    """
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(temperature=0.1)
+    )
+    return response.text.strip()
+
 def get_trading_advice_news(ticker, metrics, news_item):
     client = genai.Client(api_key=GEMINI_API_KEY)
     now_str = datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M UTC')
