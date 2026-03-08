@@ -1,6 +1,6 @@
 [
     {
-        "ticker": "CSL",
+        "ticker": "CSL.AX",
         "rules": [
             { "indicator": "RSI", "operator": ">", "threshold": 40 }
         ]
