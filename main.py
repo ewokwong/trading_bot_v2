@@ -107,12 +107,12 @@ def main():
     
     # ------- SEND FULL REPORT TO EMAIL, SUMMARY TO TELEGRAM ------- #
     email_report = generate_trading_email(report) # Just parsing manually
-    # telegram_summary = prepare_telegram_summary(report) # Uses an LLM call
+    telegram_summary = prepare_telegram_summary(report) # Uses an LLM call
 
     print("Email Report", email_report)
-    # print("Telegram Report", telegram_summary)
+    print("Telegram Report", telegram_summary)
     send_report_email(email_report)
-    # send_telegram_message(telegram_summary)
+    send_telegram_message(telegram_summary)
     print("Done! Happy money-making :D")
 
 if __name__ == "__main__":
