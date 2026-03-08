@@ -43,7 +43,7 @@ def prepare_email_report(report_text):
     )
     
     response = client.models.generate_content(
-        model=GEMINI_MODEL
+        model=GEMINI_MODEL,
         contents=prompt, 
         config=config
     )
