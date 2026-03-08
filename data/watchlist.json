@@ -11,5 +11,11 @@
             { "indicator": "RSI", "operator": ">", "threshold": 40 },
             { "indicator": "Price", "operator": "<=", "threshold": 100.00 }
         ]
+    },
+    {
+        "ticker": "UNH",
+        "rules": [
+            { "indicator": "RSI", "operator": ">", "threshold": 40 }
+        ]
     }
 ]
