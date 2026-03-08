@@ -1,27 +1,22 @@
 import json
 import os
 import pytz
-import yfinance as yf
+import time
 
+from clients.geminiClient import get_trading_advice_holdings, get_trading_advice_watchlist
+from clients.telegramClient import send_telegram_message
 from datetime import datetime
 from dotenv import load_dotenv
-from clients.geminiClient import get_trading_advice
-from clients.telegramClient import send_telegram_message
+from utils.utils import check_exit_conditions
+from utils.yfinanceUtils import get_stock_info, get_market_metrics
 
 # Load env variables
 load_dotenv()
 HOLDINGS_FILE = "data/holdings.json"
 WATCHLIST = "data/watchlist.json"
 
-def check_exit_conditions(current_price, target_sell, stop_loss):
-    if target_sell > 0 and current_price >= target_sell:
-        return f"🚨 TARGET REACHED: ${target_sell}"
-    if stop_loss > 0 and current_price <= stop_loss:
-        return f"📉 STOP LOSS HIT: ${stop_loss}"
-    return None
-
-
 def main():
+    # # ------- HOLDINGS ------- #
     if not os.path.exists(HOLDINGS_FILE):
         print(f"File {HOLDINGS_FILE} not found.")
         return
@@ -36,8 +31,8 @@ def main():
         stop_loss = float(item.get('stop_loss_price', 0))
         buy_datetime = datetime.fromisoformat(item["buy_datetime"]).astimezone(pytz.utc)
         
-        print(f"Processing {ticker}...")
-        stock = yf.Ticker(ticker)
+        stock = get_stock_info(ticker)
+        
         try:
             current_price = stock.history(period="1d")['Close'].iloc[-1]
         except Exception as e:
@@ -45,7 +40,7 @@ def main():
             continue
         
         exit_alert = check_exit_conditions(current_price, target_sell, stop_loss)
-        advice = get_trading_advice(ticker, buy_price, current_price, buy_datetime, exit_alert)
+        advice = get_trading_advice_holdings(ticker, buy_price, current_price, buy_datetime, exit_alert)
         
         # Build final message with a header
         header = f"🚀 <b>TRADING UPDATE: {ticker}</b>\n"
@@ -54,6 +49,27 @@ def main():
             
         full_message = f"{header}\n{advice}"
         send_telegram_message(full_message)
+    
+    # ------- WATCHLIST ------- #
+    if not os.path.exists(WATCHLIST):
+        print(f"File {WATCHLIST} not found.")
+        return
+
+    with open(WATCHLIST, 'r') as f:
+        watchlist = json.load(f)
+
+    for i, item in enumerate(watchlist):
+        if i > 0:
+            time.sleep(10) 
+
+        ticker = item['ticker']
+        print(f"Checking Watchlist: {ticker}...")
+        
+        metrics = get_market_metrics(ticker)
+        advice = get_trading_advice_watchlist(ticker, metrics, item)
+        
+        full_report = f"🎯 <b>WATCHLIST ENTRY SIGNAL: {ticker}</b>\n{advice}"
+        send_telegram_message(full_report)
 
 if __name__ == "__main__":
     main()
