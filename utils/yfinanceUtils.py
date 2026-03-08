@@ -16,18 +16,13 @@ def calculate_rsi(df):
     avg_gain = np.full(len(df), np.nan)
     avg_loss = np.full(len(df), np.nan)
     
-    # 1. The first calculation is an SMA (Simple Moving Average)
-    # Note: index length represents the 15th element (0-indexed)
     avg_gain[length] = gain.iloc[1:length+1].mean()
     avg_loss[length] = loss.iloc[1:length+1].mean()
     
-    # 2. Subsequent values use the RMA recursive formula
     for i in range(length + 1, len(df)):
         avg_gain[i] = (avg_gain[i-1] * (length - 1) + gain.iloc[i]) / length
         avg_loss[i] = (avg_loss[i-1] * (length - 1) + loss.iloc[i]) / length
     
-    # 3. Calculate RSI with zero-loss handling
-    # Handle division by zero: if avg_loss is 0, RSI is 100
     with np.errstate(divide='ignore', invalid='ignore'):
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))

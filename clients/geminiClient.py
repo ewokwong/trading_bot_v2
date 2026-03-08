@@ -8,6 +8,53 @@ from google.genai import types
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "gemini-3.1-flash-lite-preview" # While on free tier... 500 Req per day limit
 
+def get_trading_advice_news(ticker, metrics, news_item):
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    now_str = datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M UTC')
+    
+    prompt = f"""
+    Current Time: {now_str}
+    Ticker: {ticker}
+    Incoming News: {news_item}
+    
+    CURRENT METRICS:
+    - Price: ${metrics['Price']:.2f}
+    - RSI: {metrics['RSI']:.1f}
+    - Previous Close: ${metrics['Prev_Close']:.2f}
+
+    TASK:
+    1. NEWS AUDIT: Analyze the incoming news for "{ticker}". Is this a "Material Catalyst" (Earnings, Guidance, M&A) or "Noise" (Analyst price target tweaks, general macro sentiment)?
+    2. CONTEXTUAL ENRICHMENT: Check if the broader sector for {ticker} is currently under pressure. Is this ticker moving in isolation?
+    3. THE RED-TEAM AUDIT: Identify the strongest "Counter-Thesis"—the reason a professional would NOT trade this news.
+    4. CLASSIFICATION: Define if this is a "Technical Dip" (Healthy pullback) or a "Fundamental Break" (Structural change).
+
+    RESPONSE FORMAT (STRICT HTML):
+    <b>🗞️ News Analysis: {ticker}</b>
+    <b>Current Price:</b> ${metrics['Price']:.2f} (RSI: {metrics['RSI']:.1f})
+    
+    <b>1. CATALYST EVALUATION:</b>
+    [Classify as MATERIAL or NOISE and explain why in one sentence.]
+
+    <b>2. SECTOR SENTIMENT:</b>
+    [Briefly describe if the sector is helping or hurting the ticker.]
+
+    <b>3. RED-TEAM AUDIT (Counter-Thesis):</b>
+    [Identify one major risk that makes this news/trade dangerous.]
+
+    <b>4. CLASSIFICATION:</b> [Technical Dip / Fundamental Break]
+
+    <b>FINAL ACTION:</b> [BUY / WAIT / AVOID]
+    <b>REASON:</b> [One sentence justification.]
+    """
+    
+    config = types.GenerateContentConfig(
+        tools=[types.Tool(google_search=types.GoogleSearch())],
+        temperature=0.0 
+    )
+
+    response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt, config=config)
+    return response.text
+
 def get_trading_advice_watchlist(ticker, metrics, watchlist_item):
     client = genai.Client(api_key=GEMINI_API_KEY)
     now_str = datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M UTC')
@@ -119,3 +166,54 @@ def get_trading_advice_holdings(ticker, buy_price, current_price, buy_datetime, 
         config=config
     )
     return response.text
+
+def identify_anxious_selloffs(lookback_hours=48):
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    
+    now_utc = datetime.now(pytz.utc)
+    start_time = (now_utc - timedelta(hours=lookback_hours)).strftime('%Y-%m-%d %H:%M')
+    
+    prompt = f"""
+    Current Time: {now_utc.strftime('%Y-%m-%d %H:%M')} UTC
+    Analysis Window: {lookback_hours}h 
+    SCOPE: Global Large-Cap ($10B+) | All Industries
+
+    TASK:
+    1. IDENTIFY OUTLIERS: Scan for Blue Chip stocks with the most extreme 5-day drawdowns (e.g., >10%) or deeply oversold RSI levels (RSI < 30). Prioritize the "Biggest Losers" in the current window.
+
+    2. QUANTIFY THE OVERREACTION: For each identified stock, determine if the sell-off is an "Anxious Overreaction." 
+    - Is the drop caused by macro noise (interest rates, geopolitical rumors, or sector-wide contagion)?
+    - Is there a "Dislocation" where the stock price has fallen significantly further than its peers or its actual earnings impact?
+
+    3. MOAT & STRUCTURAL NECESSITY: Filter for "Economic Linchpins." 
+    - Could the economy function normally without them? (e.g., ASML for lithography, CBA for AU liquidity, UNH for US healthcare).
+    - High Priority: If the company is an "Economic Necessity" but is being sold off like a speculative asset.
+
+    4. SECTOR DIVERSITY: Provide 5 stocks across different industries to ensure a diversified "Recovery" watchlist.
+
+    FORMATTING RULES:
+    - ASX: Append '.AX' | Global: Use standard Tickers.
+
+    RESPONSE FORMAT (JSON ARRAY ONLY):
+    [
+    {{
+        "ticker": "TKR",
+        "industry": "Industry Name",
+        "rsi_level": "XX",
+        "drawdown_5d": "X%",
+        "overreaction_evidence": "Specific reason why the market has 'punished' this stock too severely relative to its moat.",
+        "moat_logic": "Explain why this firm is a structural necessity for the economy.",
+        "recovery_catalyst": "What event (e.g., upcoming CPI data, earnings correction) will trigger the reversal?"
+    }}
+    ]
+    """
+
+
+    config = types.GenerateContentConfig(
+        tools=[types.Tool(google_search=types.GoogleSearch())],
+        temperature=0.0,
+        response_mime_type="application/json"
+    )
+
+    response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt, config=config)
+    return json.loads(response.text)
