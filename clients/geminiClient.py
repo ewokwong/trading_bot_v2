@@ -12,36 +12,43 @@ def prepare_email_report(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     
     prompt = f"""
-    CONTEXT: Financial Data Architect.
+    CONTEXT: High-End Financial UI/UX Designer (2026 Standards).
     INPUT: {report_text}
     
-    TASK: Convert input into a high-density HTML dashboard. 
+    TASK: Convert the input into a professional, high-density HTML dashboard for an email.
     
-    RULES:
-    1. NO PARAGRAPHS: Use bullet points and <b>Key:</b> Value pairs only.
-    2. GRID LAYOUT: Each ticker is a card. Inside the card, use a 2-column table or clean list for:
-       - Price/RSI | Action | Conviction
-       - Catalyst (1 sentence)
-       - Risk (1 sentence)
-    3. COLOR STRIPE: Use a 5px left-border on each card based on Action:
-       - BUY: #27ae60 | AVOID: #e74c3c | WAIT/HOLD: #f39c12
-    4. DENSITY: Eliminate "fluff" phrases like "The most material news is..." or "Based on the data...".
+    DESIGN SYSTEM (CALM & CREDIBLE):
+    1. LAYOUT: Use a single-column 600px container. Each asset (Ticker) gets its own master card.
+    2. TYPOGRAPHY: Body: 14px Sans-serif (Arial/Helvetica). Metrics: 13px Monospace (Courier) for a "Terminal" feel.
+    3. ACTION BADGES: 
+       - BUY: Background #e6f4ea, Text #137333 (Green)
+       - AVOID: Background #fce8e6, Text #c5221f (Red)
+       - WAIT/HOLD: Background #fef7e0, Text #b06000 (Amber)
+    4. DATA GRID: A subtle #f8f9fa block for Price/RSI/PL. Use | separators.
+    5. SECTIONING: Use <h3> headers with a 1px border-bottom for "CRITICAL NEWS" and "THESIS MONITOR." 
+    6. EMOJIS: Use as functional icons (e.g., 🔍 for Audit, 📉 for Sentiment, ✅ for Compliance).
+
+    STRICT RULES:
+    - NO INTRO/OUTRO. Only the <div>.
+    - NESTED DATA: For "News," "Strategy Compliance," and "Thesis," use <ul> with 5px padding between items.
+    - BOLDING: Bold all labels (e.g., **CONVICTION:**) but keep values plain text unless they are the "Final Action."
+    - TRUNCATION: If a news point is extremely long (>4 sentences), summarize it into a punchy 2-sentence fragment.
     
-    OUTPUT: Return ONLY the raw HTML <div> content.
+    OUTPUT: Return ONLY raw HTML. Use table-based layouts for email reliability where needed, but keep the <div> wrapper.
     """
 
-    # We set a higher limit but guide the model to be dense
     config = types.GenerateContentConfig(
-        temperature=0.0,
-        max_output_tokens=4096 
+        temperature=0.1, # Slight temp for better summarization of long news
+        max_output_tokens=8192
     )
     
     response = client.models.generate_content(
-        model=GEMINI_MODEL,
+        model="gemini-2.0-flash", # Best for HTML structure
         contents=prompt, 
         config=config
     )
     return response.text.strip()
+
 def prepare_telegram_summary(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     
@@ -49,26 +56,30 @@ def prepare_telegram_summary(report_text):
     CONTEXT: High-frequency trading desk dispatcher.
     INPUT: {report_text}
     
-    TASK: Generate a concise, high-density Telegram alert in HTML.
-    
+    TASK: Generate a concise, high-density Telegram alert in HTML. 
+    Organize the output into three distinct sections: 
+    1. 📂 <b>PORTFOLIO STATUS</b>
+    2. 🎯 <b>WATCHLIST SIGNALS</b>
+    3. 🚨 <b>NEWS SIGNALS</b>
+
     STRUCTURE FOR EACH TICKER:
     <b>$TICKER</b> | EMOJI <b>ACTION</b>
-    <code>Context:</code> [1 sentence max: Current Price/RSI]
-    <code>Strategy:</code> [1-2 sentences max: Key catalyst or risk reason]
+    <code>Context:</code> [Price/RSI/PL%]
+    <code>Strategy:</code> [Key catalyst/risk fragment]
     — — — — — — — — — —
 
     GUIDELINES:
     1. EMOJIS: 📈 BUY | 🛑 AVOID | ⏳ WAIT/HOLD.
-    2. BREVITY: Avoid phrases like "The reason for this is" or "In conclusion." 
-    3. DATA-DENSE: Use fragments. (e.g., "GTC catalyst + 14% drawdown" instead of "There is an upcoming GTC conference and a fourteen percent price drop.")
-    4. NO SUMMARY: Do not add an intro or outro. Start immediately with the first ticker.
+    2. SECTIONING: If a section is empty in the input, omit the header entirely.
+    3. BREVITY: Use technical fragments. No filler text or conversational intros.
+    4. NO SUMMARY: Start immediately with the first header.
     
     LIMIT: Strictly under 4000 characters.
     """
 
     config = types.GenerateContentConfig(
-        temperature=0.0, # Zero for maximum consistency
-        max_output_tokens=2048 # Keeps response focused
+        temperature=0.0,
+        max_output_tokens=2048 
     )
 
     response = client.models.generate_content(
