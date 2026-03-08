@@ -12,51 +12,69 @@ def prepare_email_report(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     
     prompt = f"""
-    CONTEXT: You are a professional financial editor.
+    CONTEXT: Financial Data Architect.
     INPUT: {report_text}
     
-    TASK: Format the input into a professional HTML email.
-    - KEEP ALL DATA: Do not summarize or remove metrics/news/reasons.
-    - STRUCTURE: Use a vertical stack of "cards" (white background, thin border).
-    - COLOR CODING: 
-        - BUY: Green (#27ae60)
-        - AVOID/SELL: Red (#e74c3c)
-        - WAIT/HOLD: Orange (#f39c12)
-    - STYLE: Use inline CSS only. Ensure it is mobile-responsive and uses sans-serif fonts.
+    TASK: Convert input into a high-density HTML dashboard. 
+    
+    RULES:
+    1. NO PARAGRAPHS: Use bullet points and <b>Key:</b> Value pairs only.
+    2. GRID LAYOUT: Each ticker is a card. Inside the card, use a 2-column table or clean list for:
+       - Price/RSI | Action | Conviction
+       - Catalyst (1 sentence)
+       - Risk (1 sentence)
+    3. COLOR STRIPE: Use a 5px left-border on each card based on Action:
+       - BUY: #27ae60 | AVOID: #e74c3c | WAIT/HOLD: #f39c12
+    4. DENSITY: Eliminate "fluff" phrases like "The most material news is..." or "Based on the data...".
     
     OUTPUT: Return ONLY the raw HTML <div> content.
     """
 
-    config = types.GenerateContentConfig(temperature=0.0)
+    # We set a higher limit but guide the model to be dense
+    config = types.GenerateContentConfig(
+        temperature=0.0,
+        max_output_tokens=4096 
+    )
+    
     response = client.models.generate_content(
         model=GEMINI_MODEL,
         contents=prompt, 
         config=config
     )
     return response.text.strip()
-
 def prepare_telegram_summary(report_text):
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     
-    # Use HTML tags explicitly in the prompt
     prompt = f"""
+    CONTEXT: High-frequency trading desk dispatcher.
     INPUT: {report_text}
     
-    TASK: Generate a Telegram alert in HTML. Try to keep within 4000 character limit if possible.
-    STRUCTURE:
-    <b>$TICKER</b> | ACTION_EMOJI <b>ACTION</b>
-    — — — — — — — — — —
-    <code>Analysis:</code> Summary sentence here.
+    TASK: Generate a concise, high-density Telegram alert in HTML.
     
+    STRUCTURE FOR EACH TICKER:
+    <b>$TICKER</b> | EMOJI <b>ACTION</b>
+    <code>Context:</code> [1 sentence max: Current Price/RSI]
+    <code>Strategy:</code> [1-2 sentences max: Key catalyst or risk reason]
+    — — — — — — — — — —
+
     GUIDELINES:
-    - Use 📈 for Buy, 🛑 for Avoid, ⏳ for Wait.
-    - Return ONLY the HTML string.
+    1. EMOJIS: 📈 BUY | 🛑 AVOID | ⏳ WAIT/HOLD.
+    2. BREVITY: Avoid phrases like "The reason for this is" or "In conclusion." 
+    3. DATA-DENSE: Use fragments. (e.g., "GTC catalyst + 14% drawdown" instead of "There is an upcoming GTC conference and a fourteen percent price drop.")
+    4. NO SUMMARY: Do not add an intro or outro. Start immediately with the first ticker.
+    
+    LIMIT: Strictly under 4000 characters.
     """
+
+    config = types.GenerateContentConfig(
+        temperature=0.0, # Zero for maximum consistency
+        max_output_tokens=2048 # Keeps response focused
+    )
 
     response = client.models.generate_content(
         model=GEMINI_MODEL,
         contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.1)
+        config=config
     )
     return response.text.strip()
 
