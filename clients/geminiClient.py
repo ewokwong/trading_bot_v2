@@ -239,6 +239,7 @@ def identify_anxious_selloffs(lookback_hours=48):
 
     FORMATTING RULES:
     - ASX: Append '.AX' | Global: Use standard Tickers.
+    - DO NOT include markdown code blocks (e.g., ```json). Output the raw JSON string starting with [ and ending with ] only.
 
     RESPONSE FORMAT (JSON ARRAY ONLY):
     [
