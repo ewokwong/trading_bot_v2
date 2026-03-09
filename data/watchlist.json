@@ -17,5 +17,17 @@
         "rules": [
             { "indicator": "RSI", "operator": ">", "threshold": 40 }
         ]
+    },
+    {
+        "ticker": "WTC.AX",
+        "rules": [
+            { "indicator": "RSI", "operator": ">", "threshold": 40 }
+        ]
+    },
+        {
+        "ticker": "CPU.AX",
+        "rules": [
+            { "indicator": "RSI", "operator": ">", "threshold": 40 }
+        ]
     }
 ]
