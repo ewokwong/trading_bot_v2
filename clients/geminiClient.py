@@ -52,6 +52,11 @@ def prepare_telegram_summary(report_text):
         contents=prompt,
         config=config
     )
+    
+    if not response or not response.text:
+        print("⚠️ Warning: AI returned an empty response or was blocked by filters.")
+        return []
+    
     return response.text.strip()
 
 def get_trading_advice_news(ticker, metrics, news_item):
