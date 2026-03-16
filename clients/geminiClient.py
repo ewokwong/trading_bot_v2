@@ -52,7 +52,7 @@ def prepare_telegram_summary(report_text):
         contents=prompt,
         config=config
     )
-    
+
     if not response or not response.text:
         print("⚠️ Warning: AI returned an empty response or was blocked by filters.")
         return []
@@ -260,13 +260,25 @@ def identify_anxious_selloffs(lookback_hours=48):
     }}
     ]
     """
-
-
     config = types.GenerateContentConfig(
         tools=[types.Tool(google_search=types.GoogleSearch())],
         temperature=0.0,
-        response_mime_type="application/json"
+        response_mime_type="application/json",
+        max_output_tokens=4096
     )
 
     response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt, config=config)
-    return json.loads(response.text)
+    
+    if not response or not response.text or response.text.strip() == "":
+        print("⚠️ Warning: Gemini returned an empty response. Returning empty list.")
+        return []
+
+    try:
+        clean_text = response.text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text.split("```json")[1].split("```")[0].strip()
+        
+        return json.loads(clean_text)
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"❌ JSON Error: {e}. Raw text: {response.text[:100]}...")
+        return []
